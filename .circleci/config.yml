@@ -12,7 +12,7 @@ jobs:
           name: Build front-end
           command: |
             cd frontend
-            npm b
+            npm i
             npm run build
             npm run lint
             exit 1
