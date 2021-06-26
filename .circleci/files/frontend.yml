@@ -5,6 +5,7 @@ Parameters:
   ID:
     Description: Unique identifier.
     Type: String
+    Default: 982828900997
 
 Resources:
   WebsiteBucket:
