@@ -33,7 +33,7 @@ jobs:
              cd backend
              npm i
              npm run build
-             npm runt lint
+             npm run lint
              exit 1
       - save_cache:
           paths: [backend/node_modules]
