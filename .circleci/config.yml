@@ -11,7 +11,7 @@ commands:
           when: on_fail
           command: |
             echo "Deleting Stacks: <<parameters.workflow_id>> "
-            aws cloudformation delete-stack --stack-name udapeople-backend-stack-<<parameters.workflow_id>>
+            aws cloudformation delete-stack --stack-name udapeople-backend-stack-<<parameters.workflow_id>>"
             aws s3 rm s3://udapeople-prod-<<parameters.workflow_id>> --recursive
             aws cloudformation delete-stack --stack-name udapeople-frontend-stack-<<parameters.workflow_id>>
             exit 1           
@@ -93,8 +93,7 @@ jobs:
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople-Project4-backend \
               --stack-name "udapeople-backend-stack-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
-              exit 1
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -102,8 +101,7 @@ jobs:
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople-Project4-frontend \
               --stack-name "udapeople-frontend-stack-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
-              exit 1
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -114,7 +112,6 @@ jobs:
             echo "http://$BACKEND_GET_IP:3030" >> .circleci/outputs/backend_url.txt
             echo "[all]" >> .circleci/ansible/inventory.txt
             echo "$BACKEND_GET_IP" >> .circleci/ansible/inventory.txt
-            exit 1
             cat .circleci/outputs/backend_url.txt
       - persist_to_workspace:
           root: ~/
