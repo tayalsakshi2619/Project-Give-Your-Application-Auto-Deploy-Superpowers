@@ -111,13 +111,12 @@ jobs:
               --output text)
             echo "[all]" >> .circleci/ansible/inventory.txt
             echo "$BACKEND_GET_IP" >> .circleci/ansible/inventory.txt
-            cat .circleci/outputs/backend_url.txt
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment:
-          workflow_id: "{CIRCLE_WORKFLOW_ID:0:7}"
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
 workflows:
   default:
