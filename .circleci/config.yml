@@ -79,7 +79,34 @@ jobs:
             cd backend
             npm i
             npm run test
-            
+  scan-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: Scan Front-end
+          command: |
+            cd backend
+            npm i
+            npm audit -audit-level=critical
+
+  scan-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Scan Back-end
+          command: |
+            cd backend
+            npm i
+            npm audit -audit-level=critical
+
   deploy-infrastructure:
     docker:
       - image: amazon/aws-cli
@@ -117,9 +144,30 @@ jobs:
             - project/.circleci/ansible/inventory.txt
       - destroy-environment:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+  
+  configure-infrastructure:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["99:ae:02:6c:2d:e4:eb:3c:2e:84:ba:44:60:c4:21:90"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+           apk add --update curl nodejs npm ansible zip
+           pip install awscli 
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i inventory.txt .circleci/ansible/configure-server.yml
+      - destroy-environment:      
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"         
 
 workflows:
   default:
     jobs:
-      - deploy-infrastructure
+      - configure-infrastructure
 
