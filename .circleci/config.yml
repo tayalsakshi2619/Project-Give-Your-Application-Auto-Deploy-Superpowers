@@ -11,8 +11,8 @@ jobs:
       - run:
           name: Build front-end
           command: |
-            cd /frontend
-            npm i
+            cd frontend
+            npm b
             npm run build
             npm run lint
             exit 1
@@ -30,7 +30,7 @@ jobs:
       - run:
           name: Back-end build
           command: |
-             cd /backend
+             cd backend
              npm i
              npm run build
              npm runt lint
