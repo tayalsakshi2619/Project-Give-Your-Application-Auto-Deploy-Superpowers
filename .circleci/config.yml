@@ -203,7 +203,7 @@ jobs:
             cd backend
             if grep -q "has been executed successfully." migration.txt
             then
-              curl -H "Content-Type: text/plain" -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request PUT --data "migration_${CIRCLE_WORKFLOW_ID}" https://api.memstash.io/values/1
+              curl -H "Content-Type: text/plain" -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request PUT --data "1" https://api.memstash.io/values/.circleci/ansible
             fi
             exit 1
       - revert-migrations     
