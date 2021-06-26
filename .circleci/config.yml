@@ -72,9 +72,9 @@ jobs:
     steps:
       -  checkout
       - restore_cache:
-          keys: [backend-build]
+          keys: [frontend-build]
       - run:
-          name: Test Back-end
+          name: Scan Front-end
           command: |
             cd frontend
             npm i
@@ -89,7 +89,7 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       - run:
-          name: Test Back-end
+          name: Scan Back-end
           command: |
             cd backend
             npm i
