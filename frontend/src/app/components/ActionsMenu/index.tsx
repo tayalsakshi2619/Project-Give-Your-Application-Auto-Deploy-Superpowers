@@ -76,6 +76,7 @@ export class ActionsMenu extends React.Component<ActionsMenu.Props> {
       {
         label: !this.props.isActive ? 'Activate' : 'Deactivate',
         click: () => {
+          // tslint:disable-next-line:max-line-length
           this.props.isActive ? this.props.actions.deactivateEmployee(this.props.employeeId) : this.props.actions.activateEmployee(this.props.employeeId);
          this.props.actions.fetchEmployees();
         },
