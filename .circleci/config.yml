@@ -13,7 +13,26 @@ commands:
             echo "Deleting Stacks: <<parameters.workflow_id>> "
             aws cloudformation delete-stack --stack-name udapeople-backend-stack-<<parameters.workflow_id>>
             aws cloudformation delete-stack --stack-name udapeople-frontend-stack-<<parameters.workflow_id>>
-            exit 1           
+            exit 1
+
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    parameters:
+           
+    steps:
+      - run:
+          name: Revert migrations
+          # Add when this will run
+          command: |
+            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
+            SUCCESS = 1
+            if(( $SUCCESS==1 )); 
+            then
+            #  cd ~/project/backend
+            #  npm install
+            #  Add revert code here. You can find this in the Getting Started section.
+              exit 1
+            fi           
 jobs:
   build-frontend:
     docker:
@@ -164,7 +183,129 @@ jobs:
           command: |
             ansible-playbook -i inventory.txt .circleci/ansible/configure-server.yml
       - destroy-environment:      
-          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"         
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+
+  run-migrations:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            cd backend
+            npm run migrations >> migration.txt
+            cat migration_output.txt
+            exit 1
+      - run:
+          name: Send migration results to memstash
+          command: |
+            cd backend
+            if grep -q "has been executed successfully." migration.txt
+            then
+              curl -H "Content-Type: text/plain" -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request PUT --data "migration_${CIRCLE_WORKFLOW_ID}" https://api.memstash.io/values/1
+            fi
+            exit 1
+      - revert-migrations     
+
+  deploy-frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            
+      - run:
+          name: Get backend url
+          command: |
+            
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+      - run:
+          name: Deploy frontend objects
+          command: |
+            # your code here
+      - destroy-environment      
+                    
+  deploy-backend:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["99:ae:02:6c:2d:e4:eb:3c:2e:84:ba:44:60:c4:21:90"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update curl nodejs npm ansible zip
+            pip install awscli
+      - run:
+          name: Deploy backend
+          command: |
+            ansible-playbook -i inventory.txt .circleci/ansible/deploy-backend.yml
+      - destroy-environment  
+
+  smoke-test:
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update curl
+            pip install awscli
+      - run:
+          name: Get backend url
+          command: |
+            
+      - run:
+          name: Backend smoke test.
+          command: |
+            # your code here
+      - run:
+          name: Frontend smoke test.
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure  
+
+  cloudfront-update:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            
+      # Here's where you will add some code to rollback on failure  
+
+cleanup:
+    docker:
+      # Docker image here
+    steps:
+      # Checkout code from git
+      - run:
+          name: Get old stack workflow id
+          command: |
+            # your code here
+            export OldWorkflowID="the id here"
+            export STACKS=[] #put the list of stacks here
+      - run:
+          name: Remove old stacks and files
+          command: |
+            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+            then
+              # your code here
+            fi          
 
 workflows:
   default:
