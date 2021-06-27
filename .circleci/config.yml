@@ -11,8 +11,8 @@ commands:
           when: on_fail
           command: |
             echo "Deleting Stacks: <<parameters.workflow_id>> "
-            aws cloudformation delete-stack --stack-name udapeople-backend-stack-<<parameters.workflow_id>>
-            aws cloudformation delete-stack --stack-name udapeople-frontend-stack-<<parameters.workflow_id>>
+            aws cloudformation delete-stack --stack-name udapeople-backend-prod-<<parameters.workflow_id>>
+            aws cloudformation delete-stack --stack-name udapeople-frontend-prod-<<parameters.workflow_id>>
             exit 1
 
   revert-migrations:
@@ -137,7 +137,7 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople-Project4-backend \
-              --stack-name "udapeople-backend-stack-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udapeople-backend-prod-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Ensure front-end infrastructure exist
@@ -145,7 +145,7 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/frontend.yml \
               --tags project=udapeople-Project4-frontend \
-              --stack-name "udapeople-frontend-stack-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name "udapeople-frontend-prod-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Add back-end ip to ansible inventory
@@ -235,7 +235,7 @@ jobs:
             npm i
             npm run build   
             cd dist
-            aws s3 cp . s3://udapeople-f4d6334 --recursive
+            aws s3 cp . s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             echo "Done"      
                     
   deploy-backend:
@@ -289,16 +289,27 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            
+            API_URL=`curl -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}`
+            echo $API_URL
+            curl -s $API_URL/api/status
       - run:
           name: Backend smoke test.
           command: |
-            # your code here
+            
       - run:
           name: Frontend smoke test.
           command: |
-            # your code here
-      # Here's where you will add some code to rollback on failure  
+            if curl -s http://udapeople-prod-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.us-west-2.amazonaws.com/ | grep "Welcome"
+            then
+            return 0
+            else
+            return 1
+            fi
+      - destroy_environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+       - undo_migrations
+           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}" 
+       
 
   cloudfront-update:
     docker:
@@ -312,30 +323,79 @@ jobs:
       - run:
           name: Update cloudfront distribution
           command: |
-            
-      # Here's where you will add some code to rollback on failure  
+            OLD_WORKFLOW_ID=$(aws cloudformation \
+              list-exports --query "Exports[?Name==\`UdapeopleWorkflowID\`].Value" \
+              --no-paginate --output text)
+            echo "OLD_WORKFLOW_ID: $OLD_WORKFLOW_ID."
+            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+              --stack-status-filter CREATE_COMPLETE --no-paginate --output text))
+            printf '%s\n' "${STACKS[@]}"
+            aws cloudformation deploy \
+              --template-file .circleci/cloudformation/cloudfront_infrastructure.yml \
+              --parameter-overrides ID="prod-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --stack-name udapeople-prod-cloudfront
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/cloudfront
+      - destroy_environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+       - undo_migrations
+           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}" 
+       
 
 cleanup:
     docker:
-      # Docker image here
+      
     steps:
-      # Checkout code from git
+      - checkout
+      - attach_workspace:
+          at: ~/
       - run:
-          name: Get old stack workflow id
+          name: Deploy the backend infrastructure using cloudformation
           command: |
-            # your code here
-            export OldWorkflowID="the id here"
-            export STACKS=[] #put the list of stacks here
-      - run:
-          name: Remove old stacks and files
-          command: |
-            if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-            then
-              # your code here
-            fi          
+            
+            if printf '%s\n' "${STACKS[@]}" | grep -q "$OLD_WORKFLOW_ID"; then
+              echo "Removing previous stack"
+              aws s3 rm "s3://udapeople-${OLD_WORKFLOW_ID}" --recursive
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${OLD_WORKFLOW_ID}"
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
+            fi  
+       - destroy_environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+       - undo_migrations
+           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"       
 
 workflows:
   default:
     jobs:
-      - deploy-backend
+      - build-frontend
+      - build-backend
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [master]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
 
