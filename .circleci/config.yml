@@ -234,15 +234,6 @@ jobs:
             cd frontend
             npm i
             npm run build   
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/frontend/dist
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Copy files to S3 bucket
-          command:
             cd frontend/dist
             aws s3 cp dist s3://udapeople-f4d6334 --recursive
             echo "Done"      
@@ -345,6 +336,5 @@ cleanup:
 workflows:
   default:
     jobs:
-      - deploy-backend
       - deploy-frontend
 
