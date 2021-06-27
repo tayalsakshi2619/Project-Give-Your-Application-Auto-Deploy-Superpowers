@@ -234,8 +234,8 @@ jobs:
             cd frontend
             npm i
             npm run build   
-            cd frontend/dist
-            aws s3 cp dist s3://udapeople-f4d6334 --recursive
+            cd frontend/build
+            aws s3 cp build s3://udapeople-f4d6334 --recursive
             echo "Done"      
                     
   deploy-backend:
@@ -261,13 +261,13 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/backend/dist
+            - project/backend/build
       - attach_workspace:
           at: ~/
       - run:
           name: Deploy to EC2
           command:
-            cd ~/project/backend/dist
+            cd ~/project/backend/build
             cp ../package.json .
             zip -rq dist.zip *
             mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
