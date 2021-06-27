@@ -198,7 +198,6 @@ jobs:
             npm run premigrations
             npm run migrations >> migration.txt
             cat migration.txt
-            exit 1
       - run:
           name: Send migration results to memstash
           command: |
@@ -207,7 +206,6 @@ jobs:
             then
               curl -H "Content-Type: text/plain" -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request PUT --data "1" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
             fi
-            exit 1
       - revert-migrations:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"     
 
