@@ -257,6 +257,7 @@ jobs:
           command: |
             cd backend
             npm i
+            npm audit fix
             npm run build
       - persist_to_workspace:
           root: ~/
