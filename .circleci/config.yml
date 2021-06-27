@@ -234,8 +234,8 @@ jobs:
             cd frontend
             npm i
             npm run build   
-            cd frontend/build
-            aws s3 cp build s3://udapeople-f4d6334 --recursive
+            cd dist
+            aws s3 cp dist s3://udapeople-f4d6334 --recursive
             echo "Done"      
                     
   deploy-backend:
