@@ -18,19 +18,19 @@ commands:
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
-           
+      workflow_id:
+        type: string       
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
+            SUCCESS = curl -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request GET https://api.memstash.io/values/migration_<<parameters.workflow_id>>
             if(( $SUCCESS==1 )); 
             then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
+            cd  ~/project/backend
+            npm i
+            npm run migration:revert
               exit 1
             fi           
 jobs:
@@ -195,7 +195,7 @@ jobs:
           command: |
             cd backend
             npm run migrations >> migration.txt
-            cat migration_output.txt
+            cat migration.txt
             exit 1
       - run:
           name: Send migration results to memstash
@@ -203,10 +203,11 @@ jobs:
             cd backend
             if grep -q "has been executed successfully." migration.txt
             then
-              curl -H "Content-Type: text/plain" -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request PUT --data "1" https://api.memstash.io/values/.circleci/ansible
+              curl -H "Content-Type: text/plain" -H "token: 8150c9d7-332f-4616-96cf-51196922832a" --request PUT --data "1" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
             fi
             exit 1
-      - revert-migrations     
+      - revert-migrations:
+          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"     
 
   deploy-frontend:
     docker:
@@ -311,4 +312,6 @@ workflows:
   default:
     jobs:
       - configure-infrastructure
+      - run-migrations:
+          requires: [configure-infrastructure]
 
