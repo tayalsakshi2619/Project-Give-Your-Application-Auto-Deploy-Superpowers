@@ -234,7 +234,7 @@ jobs:
             cd frontend
             npm i
             npm run build   
-            cd build
+            cd dist
             aws s3 cp . s3://udapeople-f4d6334 --recursive
             echo "Done"      
                     
@@ -261,7 +261,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/backend/build
+            - project/backend/dist
       - attach_workspace:
           at: ~/
       - run:
@@ -270,9 +270,9 @@ jobs:
             cd ~/project/backend/build
             cp ../package.json .
             zip -rq dist.zip *
-            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
-            mv dist.zip ~/project/.circleci/ansible/roles/deploy/files/
-            ansible-playbook -i inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
+            mkdir -p ~/project/.circleci/.ansible/roles/deploy/files/
+            mv dist.zip ~/project/.circleci/.ansible/roles/deploy/files/
+            ansible-playbook -i inventory.txt ~/project/.circleci/.ansible/deploy-backend.yml
             echo "Done"  
 
   smoke-test:
@@ -336,5 +336,5 @@ cleanup:
 workflows:
   default:
     jobs:
-      - deploy-frontend
+      - deploy-backend
 
