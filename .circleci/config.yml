@@ -268,12 +268,12 @@ jobs:
       - run:
           name: Deploy to EC2
           command:
-            cd ~/project/backend/build
+            cd backend/dist
             cp ../package.json .
             zip -rq dist.zip *
-            mkdir -p ~/project/.circleci/.ansible/roles/deploy/files/
-            mv dist.zip ~/project/.circleci/.ansible/roles/deploy/files/
-            ansible-playbook -i inventory.txt ~/project/.circleci/.ansible/deploy-backend.yml
+            mkdir -p .circleci/.ansible/roles/deploy/files/
+            mv dist.zip .circleci/.ansible/roles/deploy/files/
+            ansible-playbook -i inventory.txt .circleci/.ansible/deploy-backend.yml
             echo "Done"  
 
   smoke-test:
