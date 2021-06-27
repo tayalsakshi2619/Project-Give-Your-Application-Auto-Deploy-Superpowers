@@ -1,1 +1,5 @@
-https://github.com/tayalsakshi381/Project-Give-Your-Application-Auto-Deploy-Superpowers
+ Public Url to GitHub repository  (not private) [URL01]: https://github.com/tayalsakshi381/Project-Give-Your-Application-Auto-Deploy-Superpowers
+ Public URL for your S3 Bucket (aka, your green candidate front-end) [URL02]: https://udapeople-prod-7f2b5ac.s3-us-west-2.amazonaws.com/
+ Public URL for your CloudFront distribution (aka, your blue production front-end) [URL03]: d16xcwytmfaala.cloudfront.net
+ Public URLs to deployed application back-end in EC2 [URL04]: ec2-54-190-54-247.us-west-2.compute.amazonaws.com
+ Public URL to your Prometheus Server [URL05]:http://ec2-35-160-138-194.us-west-2.compute.amazonaws.com:9090
