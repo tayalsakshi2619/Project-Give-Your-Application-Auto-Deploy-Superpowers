@@ -235,7 +235,7 @@ jobs:
             npm i
             npm run build   
             cd build
-            aws s3 cp build s3://udapeople-f4d6334 --recursive
+            aws s3 cp . s3://udapeople-f4d6334 --recursive
             echo "Done"      
                     
   deploy-backend:
