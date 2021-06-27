@@ -193,8 +193,8 @@ jobs:
       - run:
           name: Run migrations
           command: |
-            npm i
             cd backend
+            npm i
             npm run migrations >> migration.txt
             cat migration.txt
             exit 1
@@ -312,7 +312,5 @@ cleanup:
 workflows:
   default:
     jobs:
-      - configure-infrastructure
-      - run-migrations:
-          requires: [configure-infrastructure]
+      - run-migrations
 
