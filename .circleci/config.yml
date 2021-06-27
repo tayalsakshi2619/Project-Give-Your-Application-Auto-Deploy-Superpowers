@@ -233,7 +233,16 @@ jobs:
           command: |
             cd frontend
             npm i
-            npm run build
+            npm run build   
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/frontend/dist
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Copy files to S3 bucket
+          command:
             cd frontend/dist
             aws s3 cp dist s3://udapeople-f4d6334 --recursive
             echo "Done"      
@@ -253,17 +262,26 @@ jobs:
             apk add --update curl nodejs npm ansible zip
             pip install awscli
       - run:
-          name: Deploy backend
+          name: Build backend
           command: |
-            cd ~/project/backend
+            cd backend
             npm i
             npm run build
-            cd dist
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend/dist
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Deploy to EC2
+          command:
+            cd ~/project/backend/dist
             cp ../package.json .
             zip -rq dist.zip *
             mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
             mv dist.zip ~/project/.circleci/ansible/roles/deploy/files/
-            ansible-playbook -i inventory.txt .circleci/ansible/deploy-backend.yml
+            ansible-playbook -i inventory.txt ~/project/.circleci/ansible/deploy-backend.yml
             echo "Done"  
 
   smoke-test:
