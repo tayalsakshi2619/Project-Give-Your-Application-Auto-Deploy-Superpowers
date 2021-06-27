@@ -193,8 +193,7 @@ jobs:
       - run:
           name: Run migrations
           command: |
-            npm install -g typescript
-            tsc -v
+            npm i
             cd backend
             npm run migrations >> migration.txt
             cat migration.txt
