@@ -255,8 +255,16 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            cd ~/project/backend
+            npm i
+            npm run build
+            cd dist
+            cp ../package.json .
+            zip -rq dist.zip *
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv dist.zip ~/project/.circleci/ansible/roles/deploy/files/
             ansible-playbook -i inventory.txt .circleci/ansible/deploy-backend.yml
-      - destroy-environment  
+            echo "Done"  
 
   smoke-test:
     docker:
@@ -319,5 +327,6 @@ cleanup:
 workflows:
   default:
     jobs:
-      - run-migrations
+      - deploy-backend
+      - deploy-frontend
 
